@@ -1,10 +1,34 @@
 # Changelog
 
+## 7.0.20
+
+* Require 26.3+.
+* Fixed poplar boats causing errors in some situations.
+* Support Paper's new EntityBreakEvent (used for cushion destruction) in protection.
+* Improved handling of buckets on waterlogged blocks when sneaking.
+* Fixed a Folia error caused by entity actions occuring across Folia region boundaries.
+* Improved command feedback when setting a state flag to "none".
+
+## 7.0.19
+
+* Require 26.2+.
+* Improved handling for TNT inside of sulfur cubes.
+* Improve performance of mob spawn prevention on Paper servers in some situations.
+* Improved handling of certain flags when `/wg flushstates` is run, or in certain login situations.
+
+## 7.0.18
+
+* Add lava-harden flag for cobblestone/stone/obsidian/basalt forming.
+* Replace PigZapEvent on Paper to avoid startup warnings.
+* Avoid unnecessary NPC checks to improve performance in some situations.
+* Filtered "multiple regions" messages in commands to only show regions that the player has permission to use the command on.
+* Fixed potential corruption that can occur in extreme region / slow hardware setups where it hasn't finished saving by the next save attempt.
+
 ## 7.0.17
 
-* Fix cocoa not being treated as a crop in relevant flags
-* Fix overlapping game mode flags sometimes not storing the expected previous game mode
-* Replace PaperLib functionality that doesn't behave as expected on MC 26.1+
+* Fix cocoa not being treated as a crop in relevant flags.
+* Fix overlapping game mode flags sometimes not storing the expected previous game mode.
+* Replace PaperLib functionality that doesn't behave as expected on MC 26.1+.
 
 ## 7.0.16
 
