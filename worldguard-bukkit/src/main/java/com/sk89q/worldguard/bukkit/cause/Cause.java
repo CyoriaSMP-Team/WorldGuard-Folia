@@ -40,6 +40,7 @@ import org.bukkit.entity.Firework;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.SulfurCube;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.Vehicle;
@@ -117,7 +118,7 @@ public final class Cause {
             return false;
         }
 
-        if (object instanceof TNTPrimed || object instanceof Vehicle) {
+        if (object instanceof TNTPrimed || object instanceof Vehicle || object instanceof SulfurCube) {
             if (!PaperLib.isPaper()) {
                 return false;
             }
@@ -330,10 +331,16 @@ public final class Cause {
                     }
                 } else if (o instanceof Creeper c) {
                     indirect = true;
-                    addAll(c.getTarget(), c.getIgniter());
+                    if (!WorldGuardPlugin.inst().isFolia()
+                            || Bukkit.isOwnedByCurrentRegion(c)) {
+                        addAll(c.getTarget(), c.getIgniter());
+                    }
                 } else if (o instanceof Creature c) {
                     indirect = true;
-                    addAll(c.getTarget());
+                    if (!WorldGuardPlugin.inst().isFolia()
+                            || Bukkit.isOwnedByCurrentRegion(c)) {
+                        addAll(c.getTarget());
+                    }
                 } else if (o instanceof BlockProjectileSource) {
                     addAll(((BlockProjectileSource) o).getBlock());
                 } else if (o instanceof LightningStrike && PaperLib.isPaper() &&
