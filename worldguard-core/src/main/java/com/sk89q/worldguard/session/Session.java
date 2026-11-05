@@ -223,6 +223,11 @@ public class Session {
      */
     @Nullable
     public Location testMoveTo(LocalPlayer player, Location to, MoveType moveType, boolean forced) {
+        if (lastValid == null) {
+            // The session can be observed before initialization due to Bukkit event ordering.
+            return null;
+        }
+
         RegionQuery query = WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery();
 
         if (!forced && needRefresh.getAndSet(false)) {
