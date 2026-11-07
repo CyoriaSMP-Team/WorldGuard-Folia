@@ -154,7 +154,7 @@ public class WorldGuardBlockListener extends AbstractListener {
             Material targetId = blockTo.getType();
 
             if ((isAir || isWater) &&
-                    wcfg.preventWaterDamage.contains(BukkitAdapter.asBlockType(targetId).getId())) {
+                    wcfg.preventWaterDamage.contains(BukkitAdapter.asBlockType(targetId).id())) {
                 event.setCancelled(true);
                 return;
             }
@@ -163,7 +163,7 @@ public class WorldGuardBlockListener extends AbstractListener {
         if (!wcfg.allowedLavaSpreadOver.isEmpty() && isLava) {
             Material targetId = blockTo.getRelative(0, -1, 0).getType();
 
-            if (!wcfg.allowedLavaSpreadOver.contains(BukkitAdapter.asBlockType(targetId).getId())) {
+            if (!wcfg.allowedLavaSpreadOver.contains(BukkitAdapter.asBlockType(targetId).id())) {
                 event.setCancelled(true);
                 return;
             }
@@ -233,11 +233,11 @@ public class WorldGuardBlockListener extends AbstractListener {
             int y = block.getY();
             int z = block.getZ();
 
-            if (wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x, y - 1, z).getType()).getId())
-                    || wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x + 1, y, z).getType()).getId())
-                    || wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x - 1, y, z).getType()).getId())
-                    || wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x, y, z - 1).getType()).getId())
-                    || wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x, y, z + 1).getType()).getId())) {
+            if (wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x, y - 1, z).getType()).id())
+                    || wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x + 1, y, z).getType()).id())
+                    || wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x - 1, y, z).getType()).id())
+                    || wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x, y, z - 1).getType()).id())
+                    || wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(world.getBlockAt(x, y, z + 1).getType()).id())) {
                 event.setCancelled(true);
                 return;
             }
@@ -303,7 +303,7 @@ public class WorldGuardBlockListener extends AbstractListener {
         if (!wcfg.disableFireSpreadBlocks.isEmpty()) {
             Block block = event.getBlock();
 
-            if (wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(block.getType()).getId())) {
+            if (wcfg.disableFireSpreadBlocks.contains(BukkitAdapter.asBlockType(block.getType()).id())) {
                 event.setCancelled(true);
                 checkAndDestroyFireAround(block.getWorld(), block.getX(), block.getY(), block.getZ());
                 return;
@@ -478,7 +478,8 @@ public class WorldGuardBlockListener extends AbstractListener {
 
         WorldConfiguration wcfg = getWorldConfig(event.getBlock().getWorld());
 
-        Material type = event.getNewState().getType();
+        Material oldType = event.getBlock().getType();
+        Material newType = event.getNewState().getType();
 
         if (event instanceof EntityBlockFormEvent) {
             if (((EntityBlockFormEvent) event).getEntity() instanceof Snowman) {
@@ -490,7 +491,7 @@ public class WorldGuardBlockListener extends AbstractListener {
             return;
         }
 
-        if (type == Material.ICE) {
+        if (newType == Material.ICE) {
             if (wcfg.disableIceFormation) {
                 event.setCancelled(true);
                 return;
@@ -502,7 +503,7 @@ public class WorldGuardBlockListener extends AbstractListener {
             }
         }
 
-        if (type == Material.SNOW) {
+        if (newType == Material.SNOW) {
             if (wcfg.disableSnowFormation) {
                 event.setCancelled(true);
                 return;
@@ -510,7 +511,7 @@ public class WorldGuardBlockListener extends AbstractListener {
             if (!wcfg.allowedSnowFallOver.isEmpty()) {
                 Material targetId = event.getBlock().getRelative(0, -1, 0).getType();
 
-                if (!wcfg.allowedSnowFallOver.contains(BukkitAdapter.asBlockType(targetId).getId())) {
+                if (!wcfg.allowedSnowFallOver.contains(BukkitAdapter.asBlockType(targetId).id())) {
                     event.setCancelled(true);
                     return;
                 }
@@ -522,13 +523,26 @@ public class WorldGuardBlockListener extends AbstractListener {
             }
         }
 
-        if (Materials.isUnwaxedCopper(event.getBlock().getType())) {
+        if (Materials.isUnwaxedCopper(oldType)) {
             if (wcfg.disableCopperBlockFade) {
                 event.setCancelled(true);
                 return;
             }
             if (wcfg.useRegions && !StateFlag.test(WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery()
                     .queryState(BukkitAdapter.adapt(event.getBlock().getLocation()), (RegionAssociable) null, Flags.COPPER_FADE))) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+
+        if (oldType == Material.LAVA && !Materials.isLiquid(newType)) {
+            if (wcfg.disableLavaHarden) {
+                event.setCancelled(true);
+                return;
+            }
+
+            if (wcfg.useRegions && !StateFlag.test(WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery()
+                .queryState(BukkitAdapter.adapt(event.getBlock().getLocation()), (RegionAssociable) null, Flags.LAVA_HARDEN))) {
                 event.setCancelled(true);
                 return;
             }
