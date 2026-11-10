@@ -21,8 +21,6 @@ package com.sk89q.worldguard.session;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.WorldGuard;
@@ -63,10 +61,10 @@ public abstract class AbstractSessionManager implements SessionManager {
         return player.hasPermission("worldguard.region.bypass." + world.getName());
     };
 
-    private final LoadingCache<WorldPlayerTuple, Boolean> bypassCache = CacheBuilder.newBuilder()
+    private final Cache<WorldPlayerTuple, Boolean> bypassCache = CacheBuilder.newBuilder()
             .maximumSize(1000)
             .expireAfterWrite(2, TimeUnit.SECONDS)
-            .build(CacheLoader.from(tuple -> BYPASS_PERMISSION_TEST.test(tuple.getWorld(), tuple.getPlayer())));
+            .build();
 
     private final Cache<CacheKey, Session> sessions = CacheBuilder.newBuilder()
             .expireAfterAccess(SESSION_LIFETIME, TimeUnit.MINUTES)
@@ -146,7 +144,13 @@ public abstract class AbstractSessionManager implements SessionManager {
             return BYPASS_PERMISSION_TEST.test(world, player);
         }
 
-        return bypassCache.getUnchecked(new WorldPlayerTuple(world, player));
+        WorldPlayerTuple bypassCacheKey = new WorldPlayerTuple(world, player);
+        Boolean bypass = bypassCache.getIfPresent(bypassCacheKey);
+        if (bypass == null) {
+            bypass = BYPASS_PERMISSION_TEST.test(world, player);
+            bypassCache.put(bypassCacheKey, bypass);
+        }
+        return bypass;
     }
 
     @Override
@@ -175,7 +179,12 @@ public abstract class AbstractSessionManager implements SessionManager {
 
     @Override
     public Session get(LocalPlayer player) {
-        Session session = sessions.asMap().computeIfAbsent(new CacheKey(player), (k) -> new Session(this));
+        CacheKey cacheKey = new CacheKey(player);
+        Session session = sessions.getIfPresent(cacheKey);
+        if (session == null) {
+            session = new Session(this);
+            sessions.put(cacheKey, session);
+        }
         session.ensureInitialized(player, this::initializeSession);
         return session;
     }
