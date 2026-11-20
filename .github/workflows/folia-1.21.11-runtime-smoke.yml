@@ -29,7 +29,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build Folia WorldEdit dependency
         working-directory: deps/worldedit
-        run: ./gradlew --no-daemon :worldedit-bukkit:build
+        run: ./gradlew --no-daemon :worldedit-bukkit:shadowJar
       - name: Build WorldGuard candidate
         run: ./gradlew --no-daemon :worldguard-bukkit:build
       - name: Download Folia and install exact candidates
@@ -48,7 +48,7 @@ jobs:
           mkdir -p runtime/plugins
           curl -fL "$URL" -o runtime/folia.jar
           echo "$SUM  runtime/folia.jar" | sha256sum -c -
-          WE="$(find deps/worldedit/worldedit-bukkit/build/libs -maxdepth 1 -type f -name 'worldedit-bukkit-*.jar' ! -name '*sources*' ! -name '*javadoc*' | head -n1)"
+          WE="$(find deps/worldedit/worldedit-bukkit/build/libs -maxdepth 1 -type f -name '*Paper*.jar' ! -name '*sources*' ! -name '*javadoc*' | head -n1)"name 'worldedit-bukkit-*.jar' ! -name '*sources*' ! -name '*javadoc*' | head -n1)"
           WG="$(find worldguard-bukkit/build/libs -maxdepth 1 -type f -name 'worldguard-bukkit-*.jar' ! -name '*sources*' ! -name '*javadoc*' | head -n1)"
           test -n "$WE" && test -n "$WG"
           cp "$WE" runtime/plugins/WorldEdit.jar
@@ -56,7 +56,7 @@ jobs:
           echo 'eula=true' > runtime/eula.txt
           printf 'online-mode=false\nserver-ip=127.0.0.1\nserver-port=25565\nmax-players=1\nview-distance=2\nsimulation-distance=2\nspawn-protection=0\n' > runtime/server.properties
           { echo "worldguard_commit=$CANDIDATE_SHA"; echo "worldedit_commit=3a69802e37448d52e157d28ed77a04b3076305a1"; echo "folia_version=1.21.11"; echo "folia_build=$BUILD"; sha256sum runtime/plugins/WorldEdit.jar runtime/plugins/WorldGuard.jar; } | tee runtime/evidence.txt
-      - name: Start Folia and verify both dependencies
+      - name: Start Folia and verify plugin enablement
         shell: bash
         run: |
           set -euo pipefail
@@ -64,15 +64,39 @@ jobs:
           java -Xms1G -Xmx2G -jar folia.jar --nogui > folia.log 2>&1 &
           PID=$!
           trap 'kill -TERM "$PID" 2>/dev/null || true; wait "$PID" 2>/dev/null || true' EXIT
+          READY=0
           for i in $(seq 1 120); do
-            grep -q "Done (" folia.log && break
-            kill -0 "$PID" 2>/dev/null || { cat folia.log; exit 1; }
+            if grep -q "Done (" folia.log; then READY=1; break; fi
+            if ! kill -0 "$PID" 2>/dev/null; then
+              echo "Folia exited before startup completed"
+              cat folia.log
+              exit 1
+            fi
             sleep 2
           done
-          grep -q "Done (" folia.log
-          grep -Fq "[WorldEdit] Enabling WorldEdit" folia.log
-          grep -Fq "[WorldGuard] Enabling WorldGuard" folia.log
-          ! grep -E "Could not load 'plugins/(WorldEdit|WorldGuard).jar'|Error occurred while enabling (WorldEdit|WorldGuard)" folia.log
+          if [ "$READY" -ne 1 ]; then
+            echo "Folia did not reach the ready state within 240 seconds"
+            tail -n 250 folia.log
+            exit 1
+          fi
+          assert_enabled() {
+            local plugin_name="$1"
+            if ! grep -Eiq "Enabling .*\${plugin_name}|\\[\${plugin_name}\\].*Enabling" folia.log; then
+              echo "Missing plugin enable log for: $plugin_name"
+              grep -Ei "plugin|error|exception|warn|severe" folia.log | tail -n 160 || true
+              tail -n 250 folia.log
+              exit 1
+            fi
+          }
+          assert_enabled "WorldEdit"
+          assert_enabled "WorldGuard"
+          if grep -Eiq "Could not load 'plugins/.*\\.jar'|Error occurred while enabling|\\[.*\\].*Severe Error" folia.log; then
+            echo "Plugin loading error detected"
+            grep -Ein "Could not load|Error occurred while enabling|Severe Error|Exception|Caused by" folia.log | tail -n 120 || true
+            exit 1
+          fi
+          echo "Folia startup and plugin enablement checks passed"
+          grep -Ei "Done \\(|Enabling .*(WorldEdit|WorldGuard)" folia.log | tail -n 80 || true
       - name: Upload runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
