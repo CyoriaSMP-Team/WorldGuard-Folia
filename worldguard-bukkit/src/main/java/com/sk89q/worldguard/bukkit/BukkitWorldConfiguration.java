@@ -91,7 +91,7 @@ public class BukkitWorldConfiguration extends YamlWorldConfiguration {
         plugin.createDefaultConfiguration(configFile, "config_world.yml");
         plugin.createDefaultConfiguration(blacklistFile, "blacklist.txt");
 
-        config = new YAMLProcessor(configFile, true, YAMLFormat.EXTENDED);
+        config = new YAMLProcessor(configFile.toPath(), true, YAMLFormat.EXTENDED);
         loadConfiguration();
 
         if (summaryOnStart) {
@@ -286,6 +286,7 @@ public class BukkitWorldConfiguration extends YamlWorldConfiguration {
         disableSoilMoistureChange = getBoolean("dynamics.disable-soil-moisture-change", false);
         disableCoralBlockFade = getBoolean("dynamics.disable-coral-block-fade", false);
         disableCopperBlockFade = getBoolean("dynamics.disable-copper-block-fade", false);
+        disableLavaHarden = getBoolean("dynamics.disable-lava-harden", false);
         allowedSnowFallOver = new HashSet<>(convertLegacyBlocks(getStringList("dynamics.snow-fall-blocks", null)));
 
         useRegions = getBoolean("regions.enable", true);
@@ -297,7 +298,7 @@ public class BukkitWorldConfiguration extends YamlWorldConfiguration {
         explosionFlagCancellation = getBoolean("regions.explosion-flags-block-entity-damage", true);
         highFreqFlags = getBoolean("regions.high-frequency-flags", false);
         checkLiquidFlow = getBoolean("regions.protect-against-liquid-flow", false);
-        regionWand = convertLegacyItem(getString("regions.wand", ItemTypes.LEATHER.getId()));
+        regionWand = convertLegacyItem(getString("regions.wand", ItemTypes.LEATHER.id()));
         maxClaimVolume = getInt("regions.max-claim-volume", 30000);
         claimOnlyInsideExistingRegions = getBoolean("regions.claim-only-inside-existing-regions", false);
         setParentOnClaim = getString("regions.set-parent-on-claim", "");
