@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: CyoriaSMP-Team/WorldEdit-Folia
-          ref: 3a69802e37448d52e157d28ed77a04b3076305a1
+          ref: d68fd3254c9cab66c3be48005533dea5022e8c57
           path: deps/worldedit
       - uses: actions/setup-java@v4
         with:
@@ -55,7 +55,7 @@ jobs:
           cp "$WG" runtime/plugins/WorldGuard.jar
           echo 'eula=true' > runtime/eula.txt
           printf 'online-mode=false\nserver-ip=127.0.0.1\nserver-port=25565\nmax-players=1\nview-distance=2\nsimulation-distance=2\nspawn-protection=0\n' > runtime/server.properties
-          { echo "worldguard_commit=$CANDIDATE_SHA"; echo "worldedit_commit=3a69802e37448d52e157d28ed77a04b3076305a1"; echo "folia_version=1.21.11"; echo "folia_build=$BUILD"; sha256sum runtime/plugins/WorldEdit.jar runtime/plugins/WorldGuard.jar; } | tee runtime/evidence.txt
+          { echo "worldguard_commit=$CANDIDATE_SHA"; echo "worldedit_commit=d68fd3254c9cab66c3be48005533dea5022e8c57"; echo "folia_version=1.21.11"; echo "folia_build=$BUILD"; sha256sum runtime/plugins/WorldEdit.jar runtime/plugins/WorldGuard.jar; } | tee runtime/evidence.txt
       - name: Start Folia and verify plugin enablement
         shell: bash
         run: |
