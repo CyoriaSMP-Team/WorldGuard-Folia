@@ -576,6 +576,10 @@ public class WorldGuardEntityListener extends AbstractListener {
             return;
         }
 
+        if (ent instanceof Creeper creeper && creeper.getTarget() instanceof Player player) {
+            Cause.trackParentCause(creeper, player);
+        }
+
         BukkitWorldConfiguration wcfg = getWorldConfig(ent.getWorld());
         if (event.getEntityType() == EntityType.WITHER) {
             if (wcfg.blockWitherExplosions) {
