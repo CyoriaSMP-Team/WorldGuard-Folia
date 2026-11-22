@@ -21,7 +21,7 @@ package com.sk89q.worldguard.bukkit.util;
 
 import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.flags.StateFlag;
-import org.bukkit.Tag;
+import org.bukkit.entity.Boat;
 import org.bukkit.entity.Allay;
 import org.bukkit.entity.Ambient;
 import org.bukkit.entity.ArmorStand;
@@ -123,7 +123,8 @@ public final class Entities {
      * @return true if the type is a Boat type
      */
     public static boolean isBoat(EntityType type) {
-        return Tag.ENTITY_TYPES_BOAT.isTagged(type);
+        Class<?> entityClass = type.getEntityClass();
+        return entityClass != null && Boat.class.isAssignableFrom(entityClass);
     }
 
     /**
